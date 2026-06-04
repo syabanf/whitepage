@@ -1,0 +1,45 @@
+---
+import "../styles/global.css";
+import type { Entry, Snapshot } from "../lib/snapshot";
+import { buildPageHead } from "../lib/seo";
+import { buildJsonLd } from "../lib/jsonld";
+
+interface Props {
+  entry: Entry;
+  snapshot: Snapshot;
+  pageUrl: URL;
+}
+
+const { entry, snapshot, pageUrl } = Astro.props;
+const head = buildPageHead(entry, snapshot, pageUrl);
+const jsonLd = buildJsonLd(entry, snapshot, pageUrl);
+const robotsContent = `${head.robots.index ? "index" : "noindex"}, ${head.robots.follow ? "follow" : "nofollow"}`;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{head.title}</title>
+    <meta name="description" content={head.description} />
+    <link rel="canonical" href={head.canonical} />
+    <meta name="robots" content={robotsContent} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={head.ogTitle} />
+    <meta property="og:description" content={head.ogDescription} />
+    <meta property="og:url" content={head.canonical} />
+    {head.ogImage && <meta property="og:image" content={head.ogImage} />}
+
+    <meta name="twitter:card" content={head.twitterCard} />
+    <meta name="twitter:title" content={head.ogTitle} />
+    <meta name="twitter:description" content={head.ogDescription} />
+
+    {jsonLd.map((doc) => (
+      <script type="application/ld+json" set:html={JSON.stringify(doc)} />
+    ))}
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

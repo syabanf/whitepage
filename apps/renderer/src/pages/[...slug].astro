@@ -1,0 +1,135 @@
+---
+import PageLayout from "../layouts/PageLayout.astro";
+import { loadSnapshotForHost, type Entry } from "../lib/snapshot";
+import { templateRegistry } from "@cms/templates";
+
+// Host-based routing: the incoming Host (subdomain or custom domain) selects
+// which project's published snapshot to serve. `?__host=` overrides for local
+// testing (localhost can't present a real custom Host).
+const hostOverride = Astro.url.searchParams.get("__host") ?? undefined;
+const host =
+  hostOverride ??
+  Astro.request.headers.get("x-forwarded-host") ??
+  Astro.request.headers.get("host") ??
+  undefined;
+const snapshot = await loadSnapshotForHost(host);
+const slugParam = (Astro.params.slug as string | undefined) ?? "home";
+const parts = slugParam.split("/").filter(Boolean);
+const apiBase = process.env.PUBLIC_API_BASE ?? "http://localhost:8080";
+const pageUrl = new URL(Astro.url.pathname, Astro.site ?? "http://localhost:4321");
+
+// Two-segment paths (/{page}/{article}) resolve to an article.
+let entry: Entry | undefined;
+let article: NonNullable<typeof snapshot.articles>[number] | undefined;
+
+if (parts.length >= 2) {
+  const pageSlug = parts[0];
+  const articleSlug = parts.slice(1).join("/");
+  article = (snapshot.articles ?? []).find(
+    (a) => a.webPageSlug === pageSlug && a.slug === articleSlug && a.publishedAt
+  );
+  if (article) {
+    entry = {
+      id: article.id,
+      type: "article",
+      slug: article.slug,
+      title: article.title,
+      body: article.body,
+      seo: article.seo,
+      publishedAt: article.publishedAt
+    };
+  }
+} else {
+  const lookupSlug = parts[0] ?? "home";
+  entry = snapshot.entries.find(
+    (e) => (e.type === "page" || e.type === "landing_page") && e.slug === lookupSlug && e.publishedAt
+  );
+}
+
+if (!entry) {
+  return new Response(`Not found: /${slugParam}`, { status: 404 });
+}
+const comments = article?.comments ?? [];
+---
+<PageLayout entry={entry} snapshot={snapshot} pageUrl={pageUrl}>
+  {entry.body.sections.map((section) => {
+    const Component = templateRegistry[section.templateKey]?.component;
+    if (!Component) return <div data-missing-template={section.templateKey} />;
+    return <Component slots={section.slots} variants={section.variants ?? {}} style={(section as any).style} />;
+  })}
+
+  {article && (
+    <section class="mx-auto max-w-3xl px-6 py-16">
+      <h2 class="text-2xl font-semibold tracking-tight">Comments</h2>
+
+      <div class="mt-6 space-y-5">
+        {comments.length === 0 ? (
+          <p class="text-sm text-muted">Be the first to comment.</p>
+        ) : (
+          comments.map((c) => (
+            <article class="border-b border-line pb-5">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-semibold">{c.authorName}</span>
+                <span class="text-xs text-muted">{new Date(c.createdAt).toLocaleDateString()}</span>
+              </div>
+              <p class="mt-1.5 text-sm leading-relaxed text-muted">{c.body}</p>
+            </article>
+          ))
+        )}
+      </div>
+
+      <form data-cms-comment data-article={article.id} data-api={apiBase} class="mt-10 space-y-4 border border-line p-6">
+        <p class="text-sm font-medium">Leave a comment</p>
+        <p data-comment-status class="hidden border border-line bg-surface p-3 text-sm"></p>
+        <div class="absolute -left-[9999px]" aria-hidden="true">
+          <label>Leave empty<input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <input name="authorName" required placeholder="Your name" class="h-10 rounded-md border border-line px-3 text-sm" />
+          <input name="authorEmail" type="email" placeholder="Email (optional)" class="h-10 rounded-md border border-line px-3 text-sm" />
+        </div>
+        <textarea name="body" required rows="3" placeholder="Your comment" class="block w-full rounded-md border border-line px-3 py-2 text-sm"></textarea>
+        <button type="submit" class="inline-flex h-11 items-center rounded-md bg-brand px-5 text-sm font-medium text-brand-fg hover:bg-brand-hover">
+          Post comment
+        </button>
+      </form>
+    </section>
+  )}
+</PageLayout>
+
+<script>
+  document.querySelectorAll<HTMLFormElement>("form[data-cms-comment]").forEach((form) => {
+    const status = form.querySelector<HTMLElement>("[data-comment-status]");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const honeypot = form.querySelector<HTMLInputElement>('input[name="website"]');
+      if (honeypot?.value) return;
+      const fd = new FormData(form);
+      const api = form.dataset.api ?? "";
+      const id = form.dataset.article ?? "";
+      try {
+        const res = await fetch(`${api}/public/articles/${id}/comments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            authorName: fd.get("authorName"),
+            authorEmail: fd.get("authorEmail"),
+            body: fd.get("body")
+          })
+        });
+        if (status) {
+          status.classList.remove("hidden");
+          status.textContent = res.ok
+            ? "Thanks! Your comment is awaiting moderation."
+            : "Sorry, something went wrong. Please try again.";
+        }
+        if (res.ok) form.reset();
+      } catch {
+        if (status) {
+          status.classList.remove("hidden");
+          status.textContent = "Network error. Please try again.";
+        }
+      }
+    });
+  });
+</script>

@@ -1,0 +1,16 @@
+DROP TABLE IF EXISTS tracking_configs;
+DROP TABLE IF EXISTS form_submissions;
+DROP TABLE IF EXISTS publish_snapshots;
+DROP TYPE  IF EXISTS publish_status;
+DROP TABLE IF EXISTS redirects;
+DROP TYPE  IF EXISTS redirect_kind;
+DROP TABLE IF EXISTS assets;
+DROP TABLE IF EXISTS content_entries;
+DROP TYPE  IF EXISTS content_status;
+DROP TABLE IF EXISTS sessions;
+DROP TABLE IF EXISTS magic_link_tokens;
+DROP TABLE IF EXISTS memberships;
+DROP TYPE  IF EXISTS user_role;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS tenants;
+DROP FUNCTION IF EXISTS set_updated_at();

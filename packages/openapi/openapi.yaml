@@ -1,0 +1,843 @@
+openapi: 3.1.0
+info:
+  title: Company Profile CMS API
+  description: |
+    Internal API for the company-profile-cms editor + renderer.
+    Source of truth — Go server stubs and TS client are generated from this spec.
+  version: 0.1.0
+  contact:
+    name: Engineering
+
+servers:
+  - url: http://localhost:8080
+    description: Local dev
+  - url: https://api.example.com
+    description: Production
+
+tags:
+  - name: auth
+  - name: tenants
+  - name: content
+  - name: assets
+  - name: redirects
+  - name: publishes
+  - name: forms
+  - name: tracking
+  - name: internal
+
+security:
+  - cookieAuth: []
+
+paths:
+  # ---------------------------------------------------------------------------
+  # Auth
+  # ---------------------------------------------------------------------------
+  /auth/magic-link:
+    post:
+      tags: [auth]
+      summary: Request a magic-link login email
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+                redirectUrl: { type: string, format: uri }
+      responses:
+        "202": { description: Email sent (always 202 to avoid enumeration) }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /auth/verify:
+    post:
+      tags: [auth]
+      summary: Exchange a magic-link token for a session cookie
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        "200":
+          description: Session created; cookie set in Set-Cookie header
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Invalidate current session
+      responses:
+        "204": { description: Logged out }
+
+  /me:
+    get:
+      tags: [auth]
+      summary: Current user with memberships
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user, memberships]
+                properties:
+                  user: { $ref: "#/components/schemas/User" }
+                  memberships:
+                    type: array
+                    items: { $ref: "#/components/schemas/Membership" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  # ---------------------------------------------------------------------------
+  # Tenants
+  # ---------------------------------------------------------------------------
+  /tenants:
+    get:
+      tags: [tenants]
+      summary: List tenants current user belongs to
+      responses:
+        "200":
+          description: Tenants
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Tenant" }
+
+  /tenants/{tenantId}:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+    get:
+      tags: [tenants]
+      summary: Get a single tenant
+      responses:
+        "200":
+          description: Tenant
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Tenant" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [tenants]
+      summary: Update tenant (brand_admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                primaryDomain: { type: string }
+      responses:
+        "200":
+          description: Updated tenant
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Tenant" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  # ---------------------------------------------------------------------------
+  # Content types and entries
+  # ---------------------------------------------------------------------------
+  /tenants/{tenantId}/content-types:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+    get:
+      tags: [content]
+      summary: List available content types
+      responses:
+        "200":
+          description: Content types
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ContentType" }
+
+  /tenants/{tenantId}/entries:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+    get:
+      tags: [content]
+      summary: List content entries (filterable)
+      parameters:
+        - name: type
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/ContentStatus" }
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Paginated entries
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EntryList" }
+    post:
+      tags: [content]
+      summary: Create a new entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EntryCreate" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Entry" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /tenants/{tenantId}/entries/{entryId}:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+      - $ref: "#/components/parameters/EntryId"
+    get:
+      tags: [content]
+      summary: Get a single entry
+      responses:
+        "200":
+          description: Entry
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Entry" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [content]
+      summary: Update an entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EntryUpdate" }
+      responses:
+        "200":
+          description: Updated entry
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Entry" }
+    delete:
+      tags: [content]
+      summary: Archive an entry (soft delete)
+      responses:
+        "204": { description: Archived }
+
+  # ---------------------------------------------------------------------------
+  # Assets
+  # ---------------------------------------------------------------------------
+  /tenants/{tenantId}/assets:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+    get:
+      tags: [assets]
+      summary: List assets
+      parameters:
+        - name: tag
+          in: query
+          schema: { type: string }
+        - name: approved
+          in: query
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Asset" }
+
+  /tenants/{tenantId}/assets/uploads:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+    post:
+      tags: [assets]
+      summary: Request a presigned upload URL for a new asset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [filename, contentType, byteSize]
+              properties:
+                filename: { type: string }
+                contentType: { type: string }
+                byteSize: { type: integer, format: int64 }
+      responses:
+        "200":
+          description: Presigned URL + pending asset ID
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [assetId, uploadUrl, storageKey]
+                properties:
+                  assetId: { type: string, format: uuid }
+                  uploadUrl: { type: string, format: uri }
+                  storageKey: { type: string }
+
+  /tenants/{tenantId}/assets/uploads/{assetId}/complete:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+      - in: path
+        name: assetId
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [assets]
+      summary: Finalize an asset upload (extracts dimensions, generates variants)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                altText: { type: string }
+                tags:
+                  type: array
+                  items: { type: string }
+      responses:
+        "200":
+          description: Asset
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Asset" }
+
+  /tenants/{tenantId}/assets/{assetId}:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+      - in: path
+        name: assetId
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      tags: [assets]
+      summary: Update asset metadata (alt text, tags, approval)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                altText: { type: string }
+                tags:
+                  type: array
+                  items: { type: string }
+                approved: { type: boolean }
+      responses:
+        "200":
+          description: Updated asset
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Asset" }
+    delete:
+      tags: [assets]
+      summary: Delete an asset
+      responses:
+        "204": { description: Deleted }
+
+  # ---------------------------------------------------------------------------
+  # Redirects
+  # ---------------------------------------------------------------------------
+  /tenants/{tenantId}/redirects:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+    get:
+      tags: [redirects]
+      responses:
+        "200":
+          description: Redirects
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Redirect" }
+    post:
+      tags: [redirects]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fromPath, toPath]
+              properties:
+                fromPath: { type: string }
+                toPath: { type: string }
+                kind:
+                  type: string
+                  enum: [permanent, temporary]
+                  default: permanent
+      responses:
+        "201":
+          description: Created redirect
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Redirect" }
+
+  /tenants/{tenantId}/redirects/{redirectId}:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+      - in: path
+        name: redirectId
+        required: true
+        schema: { type: string, format: uuid }
+    delete:
+      tags: [redirects]
+      responses:
+        "204": { description: Deleted }
+
+  # ---------------------------------------------------------------------------
+  # Publishes
+  # ---------------------------------------------------------------------------
+  /tenants/{tenantId}/publishes:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+    get:
+      tags: [publishes]
+      summary: List publish history
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Publishes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Publish" }
+    post:
+      tags: [publishes]
+      summary: Trigger a publish of all draft changes
+      responses:
+        "202":
+          description: Publish enqueued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Publish" }
+
+  /tenants/{tenantId}/publishes/{publishId}:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+      - in: path
+        name: publishId
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [publishes]
+      responses:
+        "200":
+          description: Publish
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Publish" }
+
+  /tenants/{tenantId}/publishes/{publishId}/rollback:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+      - in: path
+        name: publishId
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [publishes]
+      summary: Roll back to a previous publish
+      responses:
+        "202":
+          description: Rollback enqueued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Publish" }
+
+  # ---------------------------------------------------------------------------
+  # Form submissions (read-only from editor)
+  # ---------------------------------------------------------------------------
+  /tenants/{tenantId}/form-submissions:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+    get:
+      tags: [forms]
+      parameters:
+        - name: landingPageId
+          in: query
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Submissions
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/FormSubmission" }
+                  nextCursor: { type: string, nullable: true }
+
+  # ---------------------------------------------------------------------------
+  # Tracking configs
+  # ---------------------------------------------------------------------------
+  /tenants/{tenantId}/tracking:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+    get:
+      tags: [tracking]
+      responses:
+        "200":
+          description: Tracking config
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TrackingConfig" }
+    patch:
+      tags: [tracking]
+      summary: Update tracking config (brand_admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TrackingConfig" }
+      responses:
+        "200":
+          description: Updated tracking config
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TrackingConfig" }
+
+  # ---------------------------------------------------------------------------
+  # Internal — for the renderer pipeline (token-auth, not cookie-auth)
+  # ---------------------------------------------------------------------------
+  /internal/tenants/{tenantId}/snapshots/{snapshotId}:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+      - in: path
+        name: snapshotId
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [internal]
+      security:
+        - serviceToken: []
+      summary: Fetch the full content tree for a snapshot (consumed by the Astro renderer)
+      responses:
+        "200":
+          description: Snapshot content tree
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SnapshotPayload" }
+
+# =============================================================================
+# Components
+# =============================================================================
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: cms_session
+    serviceToken:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+
+  parameters:
+    TenantId:
+      in: path
+      name: tenantId
+      required: true
+      schema: { type: string, format: uuid }
+    EntryId:
+      in: path
+      name: entryId
+      required: true
+      schema: { type: string, format: uuid }
+    Cursor:
+      in: query
+      name: cursor
+      schema: { type: string, nullable: true }
+    Limit:
+      in: query
+      name: limit
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: Not authenticated
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: Authenticated but not authorized
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, example: "validation_failed" }
+        message: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+
+    User:
+      type: object
+      required: [id, email]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        name: { type: string, nullable: true }
+        lastLoginAt: { type: string, format: date-time, nullable: true }
+
+    UserRole:
+      type: string
+      enum: [brand_admin, editor]
+
+    Membership:
+      type: object
+      required: [tenantId, role]
+      properties:
+        tenantId: { type: string, format: uuid }
+        tenantName: { type: string }
+        tenantSlug: { type: string }
+        role: { $ref: "#/components/schemas/UserRole" }
+
+    Tenant:
+      type: object
+      required: [id, slug, name]
+      properties:
+        id: { type: string, format: uuid }
+        slug: { type: string }
+        name: { type: string }
+        primaryDomain: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ContentStatus:
+      type: string
+      enum: [draft, published, archived]
+
+    ContentType:
+      type: object
+      required: [key, label, isRoutable, isSingleton]
+      properties:
+        key: { type: string, example: "page" }
+        label: { type: string, example: "Page" }
+        isRoutable: { type: boolean, description: "Has its own URL (page, landing_page) vs. embedded (team_member)" }
+        isSingleton: { type: boolean, description: "Only one allowed per tenant (e.g. home page)" }
+        # The slot/variant schema for sections is template-side; not exposed here.
+
+    Section:
+      type: object
+      required: [id, templateKey]
+      properties:
+        id: { type: string, description: "Stable client-generated section id" }
+        templateKey: { type: string, example: "hero_centered" }
+        slots:
+          type: object
+          additionalProperties: true
+        variants:
+          type: object
+          additionalProperties: true
+
+    SeoMeta:
+      type: object
+      properties:
+        title: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        canonical: { type: string, nullable: true }
+        ogTitle: { type: string, nullable: true }
+        ogDescription: { type: string, nullable: true }
+        ogImageAssetId: { type: string, format: uuid, nullable: true }
+        twitterCard: { type: string, enum: [summary, summary_large_image], nullable: true }
+        robots:
+          type: object
+          properties:
+            index: { type: boolean }
+            follow: { type: boolean }
+
+    Entry:
+      type: object
+      required: [id, tenantId, type, title, status, body, seo, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        tenantId: { type: string, format: uuid }
+        type: { type: string }
+        slug: { type: string, nullable: true }
+        title: { type: string }
+        status: { $ref: "#/components/schemas/ContentStatus" }
+        body:
+          type: object
+          properties:
+            sections:
+              type: array
+              items: { $ref: "#/components/schemas/Section" }
+          additionalProperties: true
+        seo: { $ref: "#/components/schemas/SeoMeta" }
+        publishedAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    EntryCreate:
+      type: object
+      required: [type, title]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        slug: { type: string }
+        body:
+          type: object
+          properties:
+            sections:
+              type: array
+              items: { $ref: "#/components/schemas/Section" }
+        seo: { $ref: "#/components/schemas/SeoMeta" }
+
+    EntryUpdate:
+      type: object
+      properties:
+        title: { type: string }
+        slug: { type: string }
+        status: { $ref: "#/components/schemas/ContentStatus" }
+        body:
+          type: object
+          properties:
+            sections:
+              type: array
+              items: { $ref: "#/components/schemas/Section" }
+        seo: { $ref: "#/components/schemas/SeoMeta" }
+
+    EntryList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Entry" }
+        nextCursor: { type: string, nullable: true }
+
+    Asset:
+      type: object
+      required: [id, tenantId, storageKey, filename, contentType, byteSize, approved, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        tenantId: { type: string, format: uuid }
+        storageKey: { type: string }
+        publicUrl: { type: string, nullable: true }
+        filename: { type: string }
+        contentType: { type: string }
+        byteSize: { type: integer, format: int64 }
+        width: { type: integer, nullable: true }
+        height: { type: integer, nullable: true }
+        altText: { type: string, nullable: true }
+        tags:
+          type: array
+          items: { type: string }
+        approved: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+    Redirect:
+      type: object
+      required: [id, fromPath, toPath, kind, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        fromPath: { type: string }
+        toPath: { type: string }
+        kind: { type: string, enum: [permanent, temporary] }
+        source: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    PublishStatus:
+      type: string
+      enum: [pending, building, live, failed, rolled_back]
+
+    Publish:
+      type: object
+      required: [id, tenantId, status, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        tenantId: { type: string, format: uuid }
+        status: { $ref: "#/components/schemas/PublishStatus" }
+        triggeredBy: { type: string, format: uuid, nullable: true }
+        buildLog: { type: string, nullable: true }
+        artifactKey: { type: string, nullable: true }
+        startedAt: { type: string, format: date-time, nullable: true }
+        finishedAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    FormSubmission:
+      type: object
+      required: [id, tenantId, formId, payload, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        tenantId: { type: string, format: uuid }
+        landingPageId: { type: string, format: uuid, nullable: true }
+        formId: { type: string }
+        payload:
+          type: object
+          additionalProperties: true
+        utm:
+          type: object
+          additionalProperties: { type: string }
+        ipAddress: { type: string, nullable: true }
+        userAgent: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    TrackingConfig:
+      type: object
+      properties:
+        ga4MeasurementId: { type: string, nullable: true }
+        gtmContainerId: { type: string, nullable: true }
+        metaPixelId: { type: string, nullable: true }
+        googleAdsConversionLabel: { type: string, nullable: true }
+        linkedinPartnerId: { type: string, nullable: true }
+        tiktokPixelId: { type: string, nullable: true }
+        clarityProjectId: { type: string, nullable: true }
+        hotjarSiteId: { type: string, nullable: true }
+
+    SnapshotPayload:
+      type: object
+      required: [tenantId, snapshotId, entries]
+      properties:
+        tenantId: { type: string, format: uuid }
+        snapshotId: { type: string, format: uuid }
+        tenant: { $ref: "#/components/schemas/Tenant" }
+        tracking: { $ref: "#/components/schemas/TrackingConfig" }
+        entries:
+          type: array
+          items: { $ref: "#/components/schemas/Entry" }
+        redirects:
+          type: array
+          items: { $ref: "#/components/schemas/Redirect" }

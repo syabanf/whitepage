@@ -1,0 +1,46 @@
+---
+export const prerender = false;
+
+import PageLayout from "../../layouts/PageLayout.astro";
+import { loadPreview } from "../../lib/preview";
+import { templateRegistry } from "@cms/templates";
+
+const { entryId } = Astro.params;
+
+let entry;
+let snapshot;
+let error: string | null = null;
+try {
+  const data = await loadPreview(entryId as string);
+  entry = data.entry;
+  snapshot = data.snapshot;
+} catch (e) {
+  error = e instanceof Error ? e.message : "preview failed";
+}
+
+const pageUrl = new URL(Astro.url.pathname, Astro.site ?? "http://localhost:4321");
+---
+{error || !entry || !snapshot ? (
+  <html lang="en">
+    <head><meta charset="utf-8" /><title>Preview unavailable</title></head>
+    <body style="font-family: Inter, system-ui, sans-serif; padding: 3rem; color: #6B7280;">
+      <p>Preview unavailable.</p>
+      {error && <pre style="color:#DC2626;font-size:0.8rem;">{error}</pre>}
+    </body>
+  </html>
+) : (
+  <PageLayout entry={entry} snapshot={snapshot} pageUrl={pageUrl}>
+    {entry.body.sections.length === 0 ? (
+      <div style="font-family: Inter, system-ui, sans-serif; padding: 4rem; text-align:center; color:#6B7280;">
+        <p>This page has no sections yet.</p>
+        <p style="font-size:0.85rem;">Add one from the builder on the right.</p>
+      </div>
+    ) : (
+      entry.body.sections.map((section) => {
+        const Component = templateRegistry[section.templateKey]?.component;
+        if (!Component) return <div data-missing-template={section.templateKey} />;
+        return <Component slots={section.slots} variants={section.variants ?? {}} style={(section as any).style} />;
+      })
+    )}
+  </PageLayout>
+)}

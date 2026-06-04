@@ -1,0 +1,16 @@
+{
+  "name": "company-profile-cms",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev:editor": "pnpm --filter @cms/editor dev",
+    "dev:renderer": "pnpm --filter @cms/renderer dev",
+    "build:editor": "pnpm --filter @cms/editor build",
+    "build:renderer": "pnpm --filter @cms/renderer build",
+    "codegen:openapi": "pnpm --filter @cms/openapi generate"
+  }
+}

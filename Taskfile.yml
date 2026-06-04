@@ -1,0 +1,107 @@
+version: "3"
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  install:
+    desc: Install all dependencies (Node + Go)
+    cmds:
+      - pnpm install
+      - go mod tidy
+
+  dev:api:
+    desc: Run the Go API in dev mode
+    dir: apps/api
+    cmds:
+      - go run ./cmd/api
+
+  dev:editor:
+    desc: Run the Next.js editor
+    cmds:
+      - pnpm dev:editor
+
+  dev:renderer:
+    desc: Run the Astro renderer in dev mode
+    cmds:
+      - pnpm dev:renderer
+
+  dev:edge:
+    desc: Run the TLS edge gateway (self-signed certs, HTTPS on :8443)
+    dir: apps/edge
+    env:
+      TLS_MODE: selfsigned
+      RENDERER_UPSTREAM: http://localhost:4321
+      RESOLVE_API_BASE: http://localhost:8080
+      RESOLVE_TOKEN: dev_only_not_secret
+    cmds:
+      - go run ./cmd/edge
+
+  build:api:
+    desc: Build the Go API binary
+    dir: apps/api
+    cmds:
+      - go build -o bin/api ./cmd/api
+
+  build:editor:
+    desc: Build the Next.js editor
+    cmds:
+      - pnpm build:editor
+
+  build:renderer:
+    desc: Build the Astro renderer
+    cmds:
+      - pnpm build:renderer
+
+  test:api:
+    desc: Run Go tests
+    dir: apps/api
+    cmds:
+      - go test ./... -race
+
+  codegen:
+    desc: Run all code generation (OpenAPI client + sqlc)
+    cmds:
+      - task: codegen:openapi
+      - task: codegen:sqlc
+
+  codegen:openapi:
+    desc: Generate TS client + Go server from OpenAPI spec
+    cmds:
+      - pnpm codegen:openapi
+      - cd apps/api && go generate ./...
+
+  codegen:sqlc:
+    desc: Generate Go from SQL queries
+    dir: apps/api
+    cmds:
+      - sqlc generate
+
+  db:up:
+    desc: Apply Postgres migrations
+    cmds:
+      - migrate -path migrations -database "$DATABASE_URL" up
+
+  db:down:
+    desc: Rollback the last Postgres migration
+    cmds:
+      - migrate -path migrations -database "$DATABASE_URL" down 1
+
+  db:new:
+    desc: Create a new migration (pass NAME=description)
+    cmds:
+      - migrate create -ext sql -dir migrations -seq {{.NAME}}
+
+  river:up:
+    desc: Apply river queue table migrations
+    dir: apps/api
+    cmds:
+      - go run -mod=mod github.com/riverqueue/river/cmd/river migrate-up --database-url "$DATABASE_URL"
+
+  river:down:
+    desc: Roll back the last river queue migration
+    dir: apps/api
+    cmds:
+      - go run -mod=mod github.com/riverqueue/river/cmd/river migrate-down --database-url "$DATABASE_URL"

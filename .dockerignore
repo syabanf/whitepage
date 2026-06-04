@@ -1,0 +1,15 @@
+.git
+**/node_modules
+**/dist
+**/.next
+**/.astro
+**/.turbo
+apps/api/.uploads
+apps/api/bin
+apps/edge/.certs
+apps/renderer/snapshots
+apps/renderer/snapshot.local.json
+**/*.log
+.env
+.env.*
+!.env.prod.example

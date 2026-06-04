@@ -1,0 +1,64 @@
+---
+import { sectionShell, ctaAttrs, imageAttrs, type SectionStyle, type CTA, type ImageRef } from "../style";
+
+interface Slots {
+  eyebrow?: string;
+  headline: string;
+  body?: string;
+  image?: ImageRef;
+  cta?: CTA;
+}
+interface Variants {
+  imagePosition?: "left" | "right";
+  background?: "white" | "gray";
+}
+interface Props {
+  slots: Slots;
+  variants?: Variants;
+  style?: SectionStyle;
+}
+
+const { slots, variants = {}, style } = Astro.props;
+const bg = variants.background ?? "white";
+const imagePosition = variants.imagePosition ?? "right";
+const bgClass = bg === "gray" ? "bg-surface" : "bg-white";
+const { sectionClass, sectionStyle } = sectionShell({ bgClass, defaultPadding: "lg" }, style);
+
+const img = slots.image ?? {};
+const hasImage = Boolean(img.url);
+const imgAttr = imageAttrs(img);
+const cta = slots.cta ? ctaAttrs(slots.cta, { kind: "primary", onBrand: false }) : null;
+---
+<section class={sectionClass} style={sectionStyle}>
+  <div class={`mx-auto grid max-w-6xl items-center gap-12 md:grid-cols-2 md:gap-16 ${imagePosition === "left" ? "" : "md:[&>*:first-child]:order-2"}`}>
+    <div>
+      {slots.eyebrow && (
+        <p class="mb-3 text-sm font-medium uppercase tracking-wide text-muted">{slots.eyebrow}</p>
+      )}
+      <h2 class="text-3xl font-semibold tracking-tight md:text-4xl">{slots.headline}</h2>
+      {slots.body && <p class="mt-5 text-lg leading-relaxed text-muted">{slots.body}</p>}
+      {cta && (
+        <a href={slots.cta!.href} class={`mt-8 ${cta.cls}`} style={cta.style}>{slots.cta!.label}</a>
+      )}
+    </div>
+
+    <div>
+      {hasImage ? (
+        <img
+          src={img.url}
+          width={img.width || undefined}
+          height={img.height || undefined}
+          alt={img.alt ?? ""}
+          loading="lazy"
+          decoding="async"
+          class={`w-full border border-line ${imgAttr.cls}`}
+          style={imgAttr.style}
+        />
+      ) : (
+        <div class="flex aspect-[4/3] w-full items-center justify-center rounded-md border border-dashed border-line bg-surface text-sm text-muted">
+          No image selected
+        </div>
+      )}
+    </div>
+  </div>
+</section>

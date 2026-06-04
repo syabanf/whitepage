@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Default tenant design tokens. Per-tenant overrides are injected at build time. */
+:root {
+  --brand: #1D4ED8;
+  --brand-hover: #1E40AF;
+  --brand-fg: #FFFFFF;
+  --ink: #0A0A0A;
+  --muted: #6B7280;
+  --surface: #FAFAFA;
+  --line: #E5E7EB;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+body {
+  color: var(--ink);
+  font-family: var(--font-sans);
+  background: #FFFFFF;
+  -webkit-font-smoothing: antialiased;
+}

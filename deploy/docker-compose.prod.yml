@@ -1,0 +1,115 @@
+# Production stack: Postgres + API(+worker) + Astro SSR renderer + TLS edge.
+# Run from the repo root:
+#   docker compose --env-file deploy/.env.prod -f deploy/docker-compose.prod.yml up -d --build
+#
+# The edge owns :80 and :443. ACME (Let's Encrypt) issues certs on demand for
+# any host the API resolves (tenant subdomains + verified custom domains).
+name: cms
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # One-shot: apply schema migrations, then exit.
+  migrate:
+    image: migrate/migrate:v4.17.1
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ../migrations:/migrations:ro
+    command:
+      [
+        "-path", "/migrations",
+        "-database", "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable",
+        "up"
+      ]
+    restart: "no"
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+      API_LOG_LEVEL: info
+      INTERNAL_TOKEN: ${INTERNAL_TOKEN}
+      PLATFORM_DOMAIN: ${PLATFORM_DOMAIN}
+      DOMAIN_DEV_AUTOVERIFY: "false" # real DNS TXT verification in prod
+      ASSET_PUBLIC_BASE: ${ASSET_PUBLIC_BASE}
+      UPLOAD_DIR: /data/uploads
+      RENDERER_SNAPSHOT_DIR: /data/snapshots
+    volumes:
+      - uploads:/data/uploads
+      - snapshots:/data/snapshots # shared with renderer (publish writes here)
+    expose:
+      - "8080"
+
+  renderer:
+    build:
+      context: ..
+      dockerfile: apps/renderer/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      RENDERER_SNAPSHOT_DIR: /data/snapshots
+      PREVIEW_API_BASE: http://api:8080
+      PREVIEW_TOKEN: ${INTERNAL_TOKEN}
+      PUBLIC_API_BASE: ${PUBLIC_API_BASE} # browser-facing API origin (forms, comments)
+    volumes:
+      - snapshots:/data/snapshots:ro
+    expose:
+      - "4321"
+
+  edge:
+    build:
+      context: ..
+      dockerfile: apps/edge/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - renderer
+      - api
+    environment:
+      TLS_MODE: acme
+      HTTPS_ADDR: ":443"
+      HTTP_ADDR: ":80"
+      RENDERER_UPSTREAM: http://renderer:4321
+      RESOLVE_API_BASE: http://api:8080
+      RESOLVE_TOKEN: ${INTERNAL_TOKEN}
+      # Serve the API over HTTPS on its own hostname (forms/comments from sites).
+      API_HOSTNAME: ${API_HOSTNAME}
+      API_UPSTREAM: http://api:8080
+      ACME_EMAIL: ${ACME_EMAIL}
+      ACME_DIRECTORY: ${ACME_DIRECTORY} # blank = LE production; set staging URL while testing
+      PUBLIC_HTTPS_PORT: "443"
+      CERT_CACHE_DIR: /certs
+    volumes:
+      - certs:/certs # persist issued certificates across restarts
+    ports:
+      - "80:80"
+      - "443:443"
+
+volumes:
+  dbdata:
+  uploads:
+  snapshots:
+  certs:

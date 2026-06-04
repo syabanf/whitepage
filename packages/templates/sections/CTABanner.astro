@@ -1,0 +1,36 @@
+---
+import { sectionShell, ctaAttrs, type SectionStyle, type CTA } from "../style";
+
+interface Slots {
+  headline: string;
+  subhead?: string;
+  cta?: CTA;
+}
+interface Variants {
+  background?: "brand" | "white";
+}
+interface Props {
+  slots: Slots;
+  variants?: Variants;
+  style?: SectionStyle;
+}
+
+const { slots, variants = {}, style } = Astro.props;
+const bg = variants.background ?? "brand";
+const isBrand = bg === "brand";
+const bgClass = isBrand ? "bg-brand text-brand-fg" : "bg-white";
+const { sectionClass, sectionStyle } = sectionShell({ bgClass, defaultPadding: "md" }, style);
+const mutedClass = isBrand ? "opacity-80" : "text-muted";
+const cta = slots.cta ? ctaAttrs(slots.cta, { kind: "primary", onBrand: isBrand }) : null;
+---
+<section class={sectionClass} style={sectionStyle}>
+  <div class="mx-auto flex max-w-4xl flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+    <div>
+      <h2 class="text-2xl font-semibold tracking-tight md:text-3xl">{slots.headline}</h2>
+      {slots.subhead && <p class={`mt-2 text-base ${mutedClass}`}>{slots.subhead}</p>}
+    </div>
+    {cta && (
+      <a href={slots.cta!.href} class={`shrink-0 ${cta.cls}`} style={cta.style}>{slots.cta!.label}</a>
+    )}
+  </div>
+</section>

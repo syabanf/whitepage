@@ -1,0 +1,171 @@
+---
+import { sectionShell, type SectionStyle } from "../style";
+
+interface FormField {
+  name: string;
+  label: string;
+  type: "text" | "email" | "tel" | "textarea" | "select";
+  required?: boolean;
+  options?: string[];
+}
+interface Slots {
+  eyebrow?: string;
+  headline: string;
+  subhead?: string;
+  benefits?: string[];
+  formId: string;
+  fields: FormField[];
+  submitLabel: string;
+  thankYouRedirect: string;
+}
+interface Variants {
+  background?: "white" | "brand";
+  layout?: "left-form-right" | "top-form-bottom";
+}
+interface Props {
+  slots: Slots;
+  variants?: Variants;
+  style?: SectionStyle;
+}
+
+const { slots, variants = {}, style } = Astro.props;
+const bg = variants.background ?? "white";
+const layout = variants.layout ?? "left-form-right";
+const isBrand = bg === "brand";
+
+const baseBgClass = isBrand ? "bg-brand text-brand-fg" : "bg-white";
+const { sectionClass, sectionStyle } = sectionShell({ bgClass: baseBgClass, defaultPadding: "lg" }, style);
+const mutedClass = isBrand ? "opacity-80" : "text-muted";
+const inputClass = isBrand
+  ? "border-white/40 bg-white/10 text-brand-fg placeholder:text-white/50 focus:border-white"
+  : "border-line bg-white text-ink placeholder:text-muted focus:border-brand";
+const submitClass = isBrand
+  ? "bg-white text-brand hover:bg-surface"
+  : "bg-brand text-brand-fg hover:bg-brand-hover";
+const benefitDotClass = isBrand ? "bg-white" : "bg-brand";
+---
+<section class={sectionClass} style={sectionStyle}>
+  <div class={`mx-auto max-w-6xl ${layout === "left-form-right" ? "grid gap-12 md:grid-cols-2 md:items-center" : "space-y-12"}`}>
+    <div>
+      {slots.eyebrow && (
+        <p class={`mb-3 text-sm font-medium uppercase tracking-wide ${mutedClass}`}>
+          {slots.eyebrow}
+        </p>
+      )}
+      <h1 class="text-4xl font-bold leading-tight tracking-tight md:text-5xl">
+        {slots.headline}
+      </h1>
+      {slots.subhead && (
+        <p class={`mt-5 text-lg leading-relaxed ${mutedClass}`}>{slots.subhead}</p>
+      )}
+      {slots.benefits && slots.benefits.length > 0 && (
+        <ul class="mt-8 space-y-3">
+          {slots.benefits.map((benefit) => (
+            <li class="flex items-start gap-3">
+              <span class={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${benefitDotClass}`} />
+              <span class={`text-base ${mutedClass}`}>{benefit}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+
+    <form
+      data-cms-form
+      data-form-id={slots.formId}
+      data-thank-you={slots.thankYouRedirect}
+      class={`rounded-md border p-6 md:p-8 ${isBrand ? "border-white/20 bg-white/5" : "border-line bg-white"}`}
+      novalidate
+    >
+      {/* honeypot — hidden from users; submit is rejected if filled */}
+      <div class="absolute -left-[9999px]" aria-hidden="true">
+        <label>Leave this empty<input type="text" name="company_website" tabindex="-1" autocomplete="off" /></label>
+      </div>
+      <div class="space-y-4">
+        {slots.fields.map((field) => (
+          <div>
+            <label for={`f-${field.name}`} class={`mb-1.5 block text-sm font-medium ${isBrand ? "text-brand-fg" : "text-ink"}`}>
+              {field.label}{field.required && <span class="ml-0.5 opacity-70">*</span>}
+            </label>
+            {field.type === "textarea" ? (
+              <textarea
+                id={`f-${field.name}`}
+                name={field.name}
+                required={field.required}
+                rows={4}
+                class={`block w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/30 ${inputClass}`}
+              />
+            ) : field.type === "select" ? (
+              <select
+                id={`f-${field.name}`}
+                name={field.name}
+                required={field.required}
+                class={`block h-10 w-full rounded-md border px-3 text-sm outline-none focus:ring-2 focus:ring-white/30 ${inputClass}`}
+              >
+                {(field.options ?? []).map((opt) => <option value={opt}>{opt}</option>)}
+              </select>
+            ) : (
+              <input
+                id={`f-${field.name}`}
+                name={field.name}
+                type={field.type}
+                required={field.required}
+                class={`block h-10 w-full rounded-md border px-3 text-sm outline-none focus:ring-2 focus:ring-white/30 ${inputClass}`}
+              />
+            )}
+          </div>
+        ))}
+        <button
+          type="submit"
+          class={`mt-2 inline-flex h-12 w-full items-center justify-center rounded-md px-6 text-base font-medium transition-colors ${submitClass}`}
+        >
+          {slots.submitLabel}
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<script>
+  // Lightweight form handler: preserves UTM params, posts to /__forms/{formId},
+  // redirects to thank-you on success. Honeypot rejection is silent.
+  document.querySelectorAll<HTMLFormElement>("form[data-cms-form]").forEach((form) => {
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const honeypot = form.querySelector<HTMLInputElement>('input[name="company_website"]');
+      if (honeypot?.value) return;
+
+      const formData = new FormData(form);
+      const payload: Record<string, FormDataEntryValue> = {};
+      formData.forEach((value, key) => {
+        if (key === "company_website") return;
+        payload[key] = value;
+      });
+
+      const utm: Record<string, string> = {};
+      const params = new URLSearchParams(window.location.search);
+      ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"].forEach((k) => {
+        const v = params.get(k);
+        if (v) utm[k] = v;
+      });
+
+      const formId = form.dataset.formId!;
+      const thankYou = form.dataset.thankYou ?? "/";
+
+      try {
+        const res = await fetch(`/__forms/${formId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ payload, utm })
+        });
+        if (res.ok) {
+          window.location.href = thankYou;
+        } else {
+          form.dispatchEvent(new CustomEvent("cms:form-error"));
+        }
+      } catch {
+        form.dispatchEvent(new CustomEvent("cms:form-error"));
+      }
+    });
+  });
+</script>

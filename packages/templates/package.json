@@ -1,0 +1,20 @@
+{
+  "name": "@cms/templates",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./sections/*": "./sections/*"
+  },
+  "files": [
+    "index.ts",
+    "types.ts",
+    "sections"
+  ],
+  "peerDependencies": {
+    "astro": "^5.0.0"
+  }
+}

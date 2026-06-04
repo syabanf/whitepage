@@ -1,0 +1,24 @@
+{
+  "name": "@cms/renderer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/node": "^9",
+    "@astrojs/sitemap": "^3.2.0",
+    "@astrojs/tailwind": "^5.1.2",
+    "@cms/templates": "workspace:*",
+    "astro": "^5.0.0",
+    "tailwindcss": "^3.4.13"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.2"
+  }
+}

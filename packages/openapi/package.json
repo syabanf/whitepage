@@ -1,0 +1,19 @@
+{
+  "name": "@cms/openapi",
+  "version": "0.0.0",
+  "private": true,
+  "description": "OpenAPI 3.1 spec for company-profile-cms — single source of truth for the API contract. Generates TS client types and Go server stubs.",
+  "main": "./generated/client.ts",
+  "types": "./generated/client.ts",
+  "files": [
+    "generated"
+  ],
+  "scripts": {
+    "generate": "openapi-typescript openapi.yaml -o generated/client.ts",
+    "lint": "redocly lint openapi.yaml"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^1.25.0",
+    "openapi-typescript": "^7.4.0"
+  }
+}

@@ -1,0 +1,7 @@
+packages:
+  - "apps/editor"
+  - "apps/renderer"
+  - "packages/openapi"
+  - "packages/ui"
+  - "packages/templates"
+  - "packages/schemas"

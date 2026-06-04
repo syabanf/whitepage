@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+vendor/
+
+# Build outputs
+dist/
+build/
+.next/
+.astro/
+out/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Go
+*.test
+*.out
+coverage.out
+/apps/api/bin/
+/apps/worker/bin/
+/apps/api/.uploads/
+
+# Generated/runtime artifacts (rebuilt on publish; not source)
+/apps/renderer/snapshot.local.json
+/apps/renderer/snapshots/
+/apps/edge/.certs/
+
+# Production secrets
+/deploy/.env.prod
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Generated code (committed elsewhere by convention — keep generated files out of source unless explicitly versioned)
+# Note: sqlc and oapi-codegen outputs ARE committed by default for traceable diffs.
+
+# Tool caches
+.turbo/
+.cache/

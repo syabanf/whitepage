@@ -1,0 +1,50 @@
+---
+import { sectionShell, ctaAttrs, type SectionStyle, type CTA } from "../style";
+
+interface Slots {
+  eyebrow?: string;
+  headline: string;
+  subhead?: string;
+  primaryCta?: CTA;
+  secondaryCta?: CTA;
+}
+interface Variants {
+  background?: "white" | "gray" | "brand";
+  align?: "center" | "left";
+}
+interface Props {
+  slots: Slots;
+  variants?: Variants;
+  style?: SectionStyle;
+}
+
+const { slots, variants = {}, style } = Astro.props;
+const bg = variants.background ?? "white";
+const align = variants.align ?? "center";
+const onBrand = bg === "brand";
+
+const bgClass = onBrand ? "bg-brand text-brand-fg" : bg === "gray" ? "bg-surface" : "bg-white";
+const { sectionClass, sectionStyle } = sectionShell({ bgClass, defaultPadding: "xl" }, style);
+const alignClass = align === "left" ? "text-left items-start" : "text-center items-center";
+const mutedClass = onBrand ? "opacity-80" : "text-muted";
+
+const primary = slots.primaryCta ? ctaAttrs(slots.primaryCta, { kind: "primary", onBrand }) : null;
+const secondary = slots.secondaryCta ? ctaAttrs(slots.secondaryCta, { kind: "secondary", onBrand }) : null;
+---
+<section class={sectionClass} style={sectionStyle}>
+  <div class={`mx-auto flex max-w-3xl flex-col ${alignClass}`}>
+    {slots.eyebrow && (
+      <p class={`mb-4 text-sm font-medium uppercase tracking-wide ${mutedClass}`}>{slots.eyebrow}</p>
+    )}
+    <h1 class="text-4xl font-bold leading-tight tracking-tight md:text-6xl">{slots.headline}</h1>
+    {slots.subhead && (
+      <p class={`mt-6 max-w-2xl text-lg leading-relaxed ${mutedClass}`}>{slots.subhead}</p>
+    )}
+    {(primary || secondary) && (
+      <div class={`mt-10 flex flex-wrap gap-4 ${align === "left" ? "" : "justify-center"}`}>
+        {primary && <a href={slots.primaryCta!.href} class={primary.cls} style={primary.style}>{slots.primaryCta!.label}</a>}
+        {secondary && <a href={slots.secondaryCta!.href} class={secondary.cls} style={secondary.style}>{slots.secondaryCta!.label}</a>}
+      </div>
+    )}
+  </div>
+</section>
