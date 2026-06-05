@@ -40,8 +40,8 @@ func (a *Admin) Stats(w http.ResponseWriter, r *http.Request) {
 			(SELECT count(*) FROM users),
 			(SELECT count(*) FROM users WHERE is_platform_admin),
 			(SELECT count(*) FROM projects),
-			(SELECT count(*) FROM content_entries),
-			(SELECT count(*) FROM content_entries WHERE status = 'published'),
+			(SELECT count(*) FROM web_pages),
+			(SELECT count(*) FROM web_pages WHERE status = 'published'),
 			(SELECT count(*) FROM articles),
 			(SELECT count(*) FROM comments),
 			(SELECT count(*) FROM comments WHERE status = 'pending'),
@@ -62,7 +62,7 @@ func (a *Admin) Tenants(w http.ResponseWriter, r *http.Request) {
 		SELECT t.id, t.slug, t.name, t.created_at,
 			(SELECT count(*) FROM projects p WHERE p.tenant_id = t.id),
 			(SELECT count(*) FROM memberships m WHERE m.tenant_id = t.id),
-			(SELECT count(*) FROM content_entries ce WHERE ce.tenant_id = t.id)
+			(SELECT count(*) FROM web_pages ce WHERE ce.tenant_id = t.id)
 		FROM tenants t
 		ORDER BY t.created_at DESC
 	`)
@@ -124,7 +124,7 @@ func (a *Admin) Users(w http.ResponseWriter, r *http.Request) {
 func (a *Admin) Projects(w http.ResponseWriter, r *http.Request) {
 	rows, err := a.pool.Query(r.Context(), `
 		SELECT p.id, p.slug, p.name, p.created_at, t.name,
-			(SELECT count(*) FROM content_entries ce WHERE ce.project_id = p.id)
+			(SELECT count(*) FROM web_pages ce WHERE ce.project_id = p.id)
 		FROM projects p
 		JOIN tenants t ON t.id = p.tenant_id
 		ORDER BY p.created_at DESC

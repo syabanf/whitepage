@@ -87,7 +87,7 @@ func (s *Server) routes() {
 			r.Post("/projects/{projectId}/domains/{domainId}/primary", domains.SetPrimary)
 			r.Delete("/projects/{projectId}/domains/{domainId}", domains.Delete)
 
-			// Articles live under a web page (content_entries)
+			// Articles live under a web page (web_pages)
 			r.Get("/entries/{entryId}/articles", articles.ListForWebPage)
 			r.Post("/entries/{entryId}/articles", articles.Create)
 			r.Get("/articles/{articleId}", articles.Get)

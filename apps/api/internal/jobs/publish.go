@@ -166,7 +166,7 @@ func (w *PublishWorker) buildSnapshot(ctx context.Context, tenantID, projectID, 
 
 	rows, err := w.pool.Query(ctx, `
 		SELECT id, type, slug, title, body, seo, published_at
-		FROM content_entries
+		FROM web_pages
 		WHERE project_id = $1 AND status = 'published'
 		ORDER BY type, slug NULLS LAST
 	`, projectID)
@@ -186,7 +186,7 @@ func (w *PublishWorker) buildSnapshot(ctx context.Context, tenantID, projectID, 
 	artRows, err := w.pool.Query(ctx, `
 		SELECT a.id, ce.slug, a.slug, a.title, a.body, a.seo, a.published_at
 		FROM articles a
-		JOIN content_entries ce ON ce.id = a.web_page_id
+		JOIN web_pages ce ON ce.id = a.web_page_id
 		WHERE a.status = 'published' AND a.project_id = $1
 		ORDER BY a.published_at DESC NULLS LAST
 	`, projectID)

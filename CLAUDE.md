@@ -21,17 +21,18 @@ Full non-goals list lives in the plan and in memory (`mvp_wedge.md`).
 ```
 Tenant            org / billing / members (users join via memberships)
  └─ Project       a single website under a tenant (many per tenant)   [table: projects]
-     └─ Web Page  routable page, composed of sections                 [table: content_entries]
+     └─ Web Page  routable page, composed of sections                 [table: web_pages]
          └─ Article   content doc under a web page, uses section builder + SEO  [table: articles]
              └─ Comment   public visitor comment, moderated            [table: comments]
 ```
 
 - `projects.tenant_id` → tenant. Each tenant has a default project (`slug='main'`).
-- "Web page" == `content_entries` (type `page`/`landing_page`). It carries `project_id`
-  (nullable during migration; backfilled to the tenant's main project). The
-  `content_entries` → `web_pages` rename + full project repointing of
-  assets/redirects/publishes/forms/tracking is a planned coordinated refactor —
-  not done yet, so the table is still named `content_entries`.
+- "Web page" == `web_pages` (type `page`/`landing_page`), renamed from
+  `content_entries` in migration `000008`. It carries a `project_id` (now
+  `NOT NULL`, backfilled to the tenant's main project). The FK repointing of
+  assets/redirects/forms/tracking from `tenant_id` to `project_id` is
+  **intentionally deferred** — it's a per-table product decision (shared brand
+  assets vs. per-project pixels/redirects), not a mechanical rename.
 - `articles.web_page_id` → parent web page (e.g. a `/blog` page lists many articles).
   Article URL = `/{web-page-slug}/{article-slug}`. Body uses the same section
   templates as web pages (brand-lock + JSON-LD still apply).
@@ -39,7 +40,7 @@ Tenant            org / billing / members (users join via memberships)
   `parent_id` supports threaded replies. Public submit endpoint + honeypot antispam
   (to be built in the app layer).
 
-Migration: `migrations/000004_project_article_comment.up.sql` (additive, non-breaking).
+Migrations: `000004_project_article_comment` (additive, non-breaking) + `000008_rename_web_pages` (table rename + `project_id NOT NULL`).
 
 ## Stack (locked in)
 

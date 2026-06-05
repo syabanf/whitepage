@@ -50,7 +50,7 @@ func (c *Content) List(w http.ResponseWriter, r *http.Request) {
 
 	q := `
 		SELECT id, tenant_id, type, slug, status::text, title, body, seo, published_at, created_at, updated_at
-		FROM content_entries
+		FROM web_pages
 		WHERE tenant_id = $1
 	`
 	args := []any{tenantID}
@@ -99,7 +99,7 @@ func (c *Content) Get(w http.ResponseWriter, r *http.Request) {
 	var e entryDTO
 	err = c.pool.QueryRow(r.Context(), `
 		SELECT id, tenant_id, type, slug, status::text, title, body, seo, published_at, created_at, updated_at
-		FROM content_entries
+		FROM web_pages
 		WHERE id = $1 AND tenant_id = $2
 	`, entryID, tenantID).Scan(&e.ID, &e.TenantID, &e.Type, &e.Slug, &e.Status, &e.Title, &e.Body, &e.Seo, &e.PublishedAt, &e.CreatedAt, &e.UpdatedAt)
 	if err != nil {
@@ -172,7 +172,7 @@ func (c *Content) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	args = append(args, entryID, tenantID)
-	q := "UPDATE content_entries SET " + strings.Join(setClauses, ", ") +
+	q := "UPDATE web_pages SET " + strings.Join(setClauses, ", ") +
 		" WHERE id = $" + intToStr(idx) + " AND tenant_id = $" + intToStr(idx+1) +
 		" RETURNING id, tenant_id, type, slug, status::text, title, body, seo, published_at, created_at, updated_at"
 
@@ -239,7 +239,7 @@ func (c *Content) Create(w http.ResponseWriter, r *http.Request) {
 	var e entryDTO
 	// Use the requested project if it belongs to this tenant, else the main project.
 	err := c.pool.QueryRow(r.Context(), `
-		INSERT INTO content_entries (tenant_id, project_id, type, slug, status, title, body, seo, created_by, updated_by)
+		INSERT INTO web_pages (tenant_id, project_id, type, slug, status, title, body, seo, created_by, updated_by)
 		VALUES (
 			$1,
 			COALESCE(
@@ -252,7 +252,7 @@ func (c *Content) Create(w http.ResponseWriter, r *http.Request) {
 		Scan(&e.ID, &e.TenantID, &e.Type, &e.Slug, &e.Status, &e.Title, &e.Body, &e.Seo, &e.PublishedAt, &e.CreatedAt, &e.UpdatedAt)
 	if err != nil {
 		// Unique violation on (tenant, type, slug)
-		if strings.Contains(err.Error(), "content_entries_tenant_type_slug_idx") {
+		if strings.Contains(err.Error(), "web_pages_tenant_type_slug_idx") {
 			WriteJSON(w, http.StatusConflict, errBody("slug_taken", "a page with that slug already exists"))
 			return
 		}
@@ -271,7 +271,7 @@ func (c *Content) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cmd, err := c.pool.Exec(r.Context(),
-		`DELETE FROM content_entries WHERE id = $1 AND tenant_id = $2`, entryID, tenantID)
+		`DELETE FROM web_pages WHERE id = $1 AND tenant_id = $2`, entryID, tenantID)
 	if err != nil {
 		c.logger.Error("delete entry", "err", err)
 		WriteJSON(w, http.StatusInternalServerError, errBody("internal", "could not delete entry"))
@@ -300,7 +300,7 @@ func (c *Content) PreviewByID(w http.ResponseWriter, r *http.Request) {
 		SELECT e.id, e.tenant_id, e.type, e.slug, e.status::text, e.title, e.body, e.seo,
 		       e.published_at, e.created_at, e.updated_at,
 		       t.name, t.slug, t.primary_domain
-		FROM content_entries e
+		FROM web_pages e
 		JOIN tenants t ON t.id = e.tenant_id
 		WHERE e.id = $1
 	`, entryID).Scan(&e.ID, &e.TenantID, &e.Type, &e.Slug, &e.Status, &e.Title, &e.Body, &e.Seo,

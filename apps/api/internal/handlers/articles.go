@@ -96,7 +96,7 @@ func (h *Articles) Create(w http.ResponseWriter, r *http.Request) {
 	var projectID uuid.UUID
 	err = h.pool.QueryRow(r.Context(), `
 		SELECT COALESCE(
-			(SELECT project_id FROM content_entries WHERE id = $1 AND tenant_id = $2),
+			(SELECT project_id FROM web_pages WHERE id = $1 AND tenant_id = $2),
 			(SELECT id FROM projects WHERE tenant_id = $2 AND slug = 'main' LIMIT 1)
 		)
 	`, webPageID, tenantID).Scan(&projectID)
