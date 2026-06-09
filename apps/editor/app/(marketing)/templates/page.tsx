@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HeroScene } from "@/components/HeroScene";
 import { ArrowRight, Check } from "lucide-react";
 
 const templates = [
@@ -74,9 +75,10 @@ const templates = [
 export default function TemplatesPage() {
   return (
     <>
-      <section className="border-b border-border">
-        <div className="mx-auto max-w-7xl px-6 py-20 md:px-10 md:py-28">
-          <div className="max-w-3xl">
+      <section className="relative overflow-hidden border-b border-border bg-[radial-gradient(60%_55%_at_12%_-10%,#EFF6FF,transparent_55%)]">
+        <HeroScene className="pointer-events-none absolute inset-0 h-full w-full" />
+        <div className="relative z-10 mx-auto max-w-7xl px-6 py-20 md:px-10 md:py-28">
+          <div className="max-w-3xl motion-safe:animate-fade-up">
             <p className="mb-5 text-xs font-medium uppercase tracking-[0.18em] text-text-muted">
               Template library
             </p>
