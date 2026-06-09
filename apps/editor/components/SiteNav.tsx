@@ -17,14 +17,14 @@ export function SiteNav() {
         </Link>
         <nav className="hidden items-center gap-10 text-sm text-text-body md:flex">
           {links.map((l) => (
-            <Link key={l.href} href={l.href} className="transition-colors hover:text-text">
+            <Link key={l.href} href={l.href} className="link-underline transition-colors hover:text-text">
               {l.label}
             </Link>
           ))}
         </nav>
         <Link
           href="/"
-          className="hidden h-9 items-center rounded-md border border-border-emphasis px-4 text-sm font-medium text-text transition-colors hover:border-brand hover:text-brand md:inline-flex"
+          className="press hidden h-9 items-center rounded-md border border-border-emphasis px-4 text-sm font-medium text-text transition-colors hover:border-brand hover:text-brand md:inline-flex"
         >
           Sign in
         </Link>

@@ -7,6 +7,7 @@ import { ColorField } from "@/components/ColorField";
 import { BuilderShell } from "@/components/BuilderShell";
 import { SaveButton } from "@/components/SaveButton";
 import { SectionPalette } from "@/components/SectionPalette";
+import { SectionFlash } from "@/components/SectionFlash";
 import { UnsavedGuard } from "@/components/UnsavedGuard";
 
 export interface BuilderActionSet {
@@ -142,6 +143,8 @@ export function DocumentBuilder({
                 ))}
               </div>
             )}
+
+            <SectionFlash sectionIds={sections.map((s) => s.id)} />
 
             <SectionPalette
               formId={formId}

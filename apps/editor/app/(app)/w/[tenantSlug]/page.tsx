@@ -39,9 +39,9 @@ export default async function WorkspacePage({
     <main>
       {/* Workspace header */}
       <section className="border-b border-border">
-        <div className="mx-auto max-w-7xl px-6 py-12 md:px-10 md:py-16">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-text-muted">Project</p>
-          <div className="mt-3 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
+        <div className="mx-auto max-w-7xl px-6 py-12 md:px-10 md:py-16 stagger-children">
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-text-muted motion-safe:animate-fade-up">Project</p>
+          <div className="mt-3 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end motion-safe:animate-fade-up">
             <div>
               <h1 className="text-h1 text-text">{active?.name ?? membership.tenantName}</h1>
               <p className="mt-2 text-sm text-text-muted">
@@ -86,7 +86,7 @@ export default async function WorkspacePage({
           </div>
 
           {/* Project switcher */}
-          <div className="mt-8 flex flex-wrap items-center gap-2">
+          <div className="mt-8 flex flex-wrap items-center gap-2 motion-safe:animate-fade-up">
             <Layers className="h-4 w-4 text-text-muted" aria-hidden="true" />
             {projects.map((p) => (
               <Link
@@ -172,8 +172,12 @@ export default async function WorkspacePage({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {publishes.slice(0, 10).map((p) => (
-                    <tr key={p.id}>
+                  {publishes.slice(0, 10).map((p, i) => (
+                    <tr
+                      key={p.id}
+                      className="motion-safe:animate-fade-in"
+                      style={{ animationDelay: `${Math.min(i, 10) * 40}ms` }}
+                    >
                       <td className="px-4 py-3 font-mono text-xs text-text-muted">{p.id.slice(0, 8)}</td>
                       <td className="px-4 py-3">
                         <PublishStatus status={p.status} />

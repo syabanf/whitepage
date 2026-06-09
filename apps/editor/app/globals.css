@@ -38,4 +38,58 @@
   .nudge {
     @apply transition-transform duration-200 ease-out group-hover:translate-x-1;
   }
+  /* Tactile press feedback for clickable surfaces that aren't <Button>. */
+  .press {
+    @apply transition-transform duration-150 ease-out active:scale-[0.98];
+  }
+  /* Underline that grows from the left on hover/focus — premium nav affordance. */
+  .link-underline {
+    position: relative;
+  }
+  .link-underline::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    height: 1px;
+    width: 100%;
+    background-color: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .link-underline:hover::after,
+  .link-underline:focus-visible::after {
+    transform: scaleX(1);
+  }
+  /* Cascade entrance: children carrying an entrance animation fire in sequence.
+     Gated to no-preference so reduced-motion users get everything at once. */
+  @media (prefers-reduced-motion: no-preference) {
+    .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+    .stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+    .stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+    .stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+    .stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+    .stagger-children > *:nth-child(6) { animation-delay: 300ms; }
+    .stagger-children > *:nth-child(7) { animation-delay: 360ms; }
+    .stagger-children > *:nth-child(8) { animation-delay: 420ms; }
+  }
+}
+
+/* One-shot highlight on a section the moment it's added in the builder.
+   SectionFlash toggles .flash-new on the new <article>. Reduced-motion users
+   are covered by the global guard above (which collapses animation duration). */
+@keyframes flash-new {
+  0% {
+    background-color: rgba(29, 78, 216, 0.12);
+  }
+  55% {
+    background-color: rgba(29, 78, 216, 0.07);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+.flash-new {
+  animation: flash-new 1.6s ease-out;
 }

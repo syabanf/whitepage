@@ -18,12 +18,12 @@ export default async function DashboardPage() {
   return (
     <main>
       <section className="border-b border-border">
-        <div className="mx-auto max-w-7xl px-6 py-16 md:px-10 md:py-20">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-text-muted">Signed in</p>
-          <h1 className="mt-3 text-h1 text-text">
+        <div className="mx-auto max-w-7xl px-6 py-16 md:px-10 md:py-20 stagger-children">
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-text-muted motion-safe:animate-fade-up">Signed in</p>
+          <h1 className="mt-3 text-h1 text-text motion-safe:animate-fade-up">
             Welcome back, <span className="text-brand">{greeting}</span>.
           </h1>
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-text-body">
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-text-body motion-safe:animate-fade-up">
             Pick a project to start editing, or spin up a new one.
           </p>
         </div>

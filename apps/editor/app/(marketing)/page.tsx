@@ -38,19 +38,19 @@ export default async function HomePage({
       {/* Hero */}
       <section className="border-b border-border">
         <div className="mx-auto grid max-w-7xl gap-16 px-6 py-20 md:grid-cols-[1.2fr_1fr] md:gap-20 md:px-10 md:py-28">
-          <div className="flex flex-col justify-center">
-            <p className="mb-5 text-xs font-medium uppercase tracking-[0.18em] text-text-muted">
+          <div className="flex flex-col justify-center stagger-children">
+            <p className="mb-5 text-xs font-medium uppercase tracking-[0.18em] text-text-muted motion-safe:animate-fade-up">
               Hosted CMS for marketing teams
             </p>
-            <h1 className="text-display text-text">
+            <h1 className="text-display text-text motion-safe:animate-fade-up">
               No broken pages.<br />
               <span className="text-brand">No SEO debt.</span>
             </h1>
-            <p className="mt-8 max-w-xl text-lg leading-relaxed text-text-body">
+            <p className="mt-8 max-w-xl text-lg leading-relaxed text-text-body motion-safe:animate-fade-up">
               Your marketing team ships pages without a developer. Your brand stays locked.
               Every page renders static, hits 90+ Lighthouse, and is wired for ads on day one.
             </p>
-            <ul className="mt-10 flex flex-col gap-3 text-sm text-text-body">
+            <ul className="mt-10 flex flex-col gap-3 text-sm text-text-body motion-safe:animate-fade-up">
               {trustStrip.map((item) => (
                 <li key={item} className="flex items-start gap-3">
                   <span className="mt-2 inline-block h-1.5 w-1.5 shrink-0 bg-brand" aria-hidden="true" />
@@ -60,7 +60,7 @@ export default async function HomePage({
             </ul>
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center motion-safe:animate-fade-up" style={{ animationDelay: "220ms" }}>
             <AuthCard error={errorMsg} />
           </div>
         </div>
@@ -87,11 +87,11 @@ export default async function HomePage({
       {/* Three-up feature grid */}
       <section className="border-b border-border">
         <div className="mx-auto max-w-7xl px-6 py-20 md:px-10 md:py-28">
-          <div className="mb-14 max-w-2xl">
-            <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-text-muted">
+          <div className="mb-14 max-w-2xl stagger-children">
+            <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-text-muted motion-safe:animate-fade-up">
               What you get
             </p>
-            <h2 className="text-h1 text-text">
+            <h2 className="text-h1 text-text motion-safe:animate-fade-up">
               The promise, in three guarantees.
             </h2>
           </div>
