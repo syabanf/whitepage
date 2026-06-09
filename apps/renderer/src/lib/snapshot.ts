@@ -67,7 +67,10 @@ export interface Snapshot {
 }
 
 export async function loadSnapshot(): Promise<Snapshot> {
-  const localFile = process.env.SNAPSHOT_JSON;
+  // SNAPSHOT_JSON is the canonical name; RENDERER_SNAPSHOT_PATH is what the
+  // publish job writes and .env defines — accept either so the writer and
+  // reader stay in sync for local dev.
+  const localFile = process.env.SNAPSHOT_JSON ?? process.env.RENDERER_SNAPSHOT_PATH;
   if (localFile) {
     const path = localFile.startsWith("/") ? localFile : join(process.cwd(), localFile);
     const raw = await readFile(path, "utf-8");
