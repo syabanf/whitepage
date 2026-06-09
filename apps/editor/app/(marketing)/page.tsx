@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import { AuthCard } from "@/components/AuthCard";
+import { HeroScene } from "@/components/HeroScene";
 
 const trustStrip = [
   "Brand-locked editing",
@@ -36,8 +37,9 @@ export default async function HomePage({
   return (
     <>
       {/* Hero */}
-      <section className="border-b border-border">
-        <div className="mx-auto grid max-w-7xl gap-16 px-6 py-20 md:grid-cols-[1.2fr_1fr] md:gap-20 md:px-10 md:py-28">
+      <section className="relative overflow-hidden border-b border-border bg-[radial-gradient(60%_55%_at_12%_-10%,#EFF6FF,transparent_55%)]">
+        <HeroScene className="pointer-events-none absolute inset-0 h-full w-full" />
+        <div className="relative z-10 mx-auto grid max-w-7xl gap-16 px-6 py-20 md:grid-cols-[1.2fr_1fr] md:gap-20 md:px-10 md:py-28">
           <div className="flex flex-col justify-center stagger-children">
             <p className="mb-5 text-xs font-medium uppercase tracking-[0.18em] text-text-muted motion-safe:animate-fade-up">
               Hosted CMS for marketing teams
