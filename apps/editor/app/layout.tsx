@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Company Profile CMS",
+  title: "White Page",
   description: "Marketing-safe websites. Built for SEO."
 };
 

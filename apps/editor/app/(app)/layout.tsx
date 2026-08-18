@@ -13,7 +13,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 md:px-10">
           <Link href="/dashboard" className="flex items-center gap-2 text-base font-semibold tracking-tight text-text">
             <span className="inline-block h-3 w-3 bg-brand" aria-hidden="true" />
-            Company<span className="text-brand">CMS</span>
+            White<span className="text-brand">Page</span>
           </Link>
           <nav className="hidden items-center gap-8 text-sm text-text-body md:flex">
             <Link href="/dashboard" className="transition-colors hover:text-text">Dashboard</Link>
