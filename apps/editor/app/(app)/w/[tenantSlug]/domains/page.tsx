@@ -44,7 +44,7 @@ export default async function DomainsPage({
   return (
     <main>
       <section className="relative overflow-hidden border-b border-border">
-        <HeroScene subtle className="pointer-events-none absolute inset-0 h-full w-full" />
+        <HeroScene className="pointer-events-none absolute inset-0 h-full w-full" />
         <div className="relative z-10 mx-auto max-w-3xl px-6 py-10 md:px-10 md:py-14">
           <Link
             href={`/w/${tenantSlug}?project=${active.id}`}

@@ -40,7 +40,7 @@ export default async function NewPage({
   return (
     <main>
       <section className="relative overflow-hidden border-b border-border">
-        <HeroScene subtle className="pointer-events-none absolute inset-0 h-full w-full" />
+        <HeroScene className="pointer-events-none absolute inset-0 h-full w-full" />
         <div className="relative z-10 mx-auto max-w-2xl px-6 py-8 md:px-10">
           <Link
             href={`/w/${tenantSlug}`}

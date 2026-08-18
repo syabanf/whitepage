@@ -19,7 +19,7 @@ export default async function DashboardPage() {
   return (
     <main>
       <section className="relative overflow-hidden border-b border-border">
-        <HeroScene subtle className="pointer-events-none absolute inset-0 h-full w-full" />
+        <HeroScene className="pointer-events-none absolute inset-0 h-full w-full" />
         <div className="relative z-10 mx-auto max-w-7xl px-6 py-16 md:px-10 md:py-20 stagger-children">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-text-muted motion-safe:animate-fade-up">Signed in</p>
           <h1 className="mt-3 text-h1 text-text motion-safe:animate-fade-up">

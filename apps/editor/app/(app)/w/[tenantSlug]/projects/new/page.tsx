@@ -35,7 +35,7 @@ export default async function NewProjectPage({
   return (
     <main>
       <section className="relative overflow-hidden border-b border-border">
-        <HeroScene subtle className="pointer-events-none absolute inset-0 h-full w-full" />
+        <HeroScene className="pointer-events-none absolute inset-0 h-full w-full" />
         <div className="relative z-10 mx-auto max-w-2xl px-6 py-8 md:px-10">
           <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text">
             <ArrowLeft className="h-4 w-4" />

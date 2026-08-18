@@ -33,7 +33,7 @@ export default async function CommentsPage({
   return (
     <main>
       <section className="relative overflow-hidden border-b border-border">
-        <HeroScene subtle className="pointer-events-none absolute inset-0 h-full w-full" />
+        <HeroScene className="pointer-events-none absolute inset-0 h-full w-full" />
         <div className="relative z-10 mx-auto max-w-5xl px-6 py-12 md:px-10 md:py-16">
           <Link
             href={`/w/${tenantSlug}`}
