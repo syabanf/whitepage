@@ -12,7 +12,7 @@ import { useEffect, useRef } from "react";
  * if WebGL is unavailable the CSS radial glow remains. Pauses when hidden and
  * disposes all GPU resources on unmount.
  */
-export function HeroScene({ className = "" }: { className?: string }) {
+export function HeroScene({ className = "", subtle = false }: { className?: string; subtle?: boolean }) {
   const mountRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -56,11 +56,13 @@ export function HeroScene({ className = "" }: { className?: string }) {
       const geometry = new THREE.PlaneGeometry(52, 30, 56, 32);
       const pos = geometry.attributes.position as InstanceType<typeof THREE.BufferAttribute>;
       const baseXY = Float32Array.from(pos.array as Float32Array);
+      // subtle: quieter presence for in-app work surfaces (headers), so the
+      // motion delights without competing with forms and content.
       const material = new THREE.MeshBasicMaterial({
         color: 0x1d4ed8,
         wireframe: true,
         transparent: true,
-        opacity: 0.34
+        opacity: subtle ? 0.14 : 0.34
       });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.rotation.x = -0.5; // tilt: top of the plane recedes
@@ -147,7 +149,7 @@ export function HeroScene({ className = "" }: { className?: string }) {
       disposed = true;
       cleanup();
     };
-  }, []);
+  }, [subtle]);
 
   // Fade the field out toward the right so the sign-in card sits on clean white.
   const fade = "linear-gradient(to right, #000 0%, #000 44%, transparent 68%)";

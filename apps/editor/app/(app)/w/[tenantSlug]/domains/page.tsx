@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HeroScene } from "@/components/HeroScene";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, CheckCircle2, ExternalLink, Globe, Plus, ShieldAlert } from "lucide-react";
 import { getMe } from "@/lib/auth/session";
@@ -42,8 +43,9 @@ export default async function DomainsPage({
 
   return (
     <main>
-      <section className="border-b border-border">
-        <div className="mx-auto max-w-3xl px-6 py-10 md:px-10 md:py-14">
+      <section className="relative overflow-hidden border-b border-border">
+        <HeroScene subtle className="pointer-events-none absolute inset-0 h-full w-full" />
+        <div className="relative z-10 mx-auto max-w-3xl px-6 py-10 md:px-10 md:py-14">
           <Link
             href={`/w/${tenantSlug}?project=${active.id}`}
             className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text"

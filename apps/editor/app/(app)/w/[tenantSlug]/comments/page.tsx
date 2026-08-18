@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HeroScene } from "@/components/HeroScene";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Check, MessageSquare, ShieldAlert, Trash2 } from "lucide-react";
 import { getMe } from "@/lib/auth/session";
@@ -31,8 +32,9 @@ export default async function CommentsPage({
 
   return (
     <main>
-      <section className="border-b border-border">
-        <div className="mx-auto max-w-5xl px-6 py-12 md:px-10 md:py-16">
+      <section className="relative overflow-hidden border-b border-border">
+        <HeroScene subtle className="pointer-events-none absolute inset-0 h-full w-full" />
+        <div className="relative z-10 mx-auto max-w-5xl px-6 py-12 md:px-10 md:py-16">
           <Link
             href={`/w/${tenantSlug}`}
             className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text"

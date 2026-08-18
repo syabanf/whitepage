@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HeroScene } from "@/components/HeroScene";
 import { notFound, redirect } from "next/navigation";
 import { ArrowRight, ExternalLink, FileText, FolderPlus, Globe, Layers, Megaphone, MessageSquare, Plus, RefreshCw } from "lucide-react";
 import { getMe } from "@/lib/auth/session";
@@ -38,8 +39,9 @@ export default async function WorkspacePage({
   return (
     <main>
       {/* Workspace header */}
-      <section className="border-b border-border">
-        <div className="mx-auto max-w-7xl px-6 py-12 md:px-10 md:py-16 stagger-children">
+      <section className="relative overflow-hidden border-b border-border">
+        <HeroScene subtle className="pointer-events-none absolute inset-0 h-full w-full" />
+        <div className="relative z-10 mx-auto max-w-7xl px-6 py-12 md:px-10 md:py-16 stagger-children">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-text-muted motion-safe:animate-fade-up">Project</p>
           <div className="mt-3 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end motion-safe:animate-fade-up">
             <div>

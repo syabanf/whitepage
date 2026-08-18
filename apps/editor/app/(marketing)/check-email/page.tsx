@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HeroScene } from "@/components/HeroScene";
 import { Mail, Terminal } from "lucide-react";
 
 export default async function CheckEmailPage({
@@ -10,8 +11,9 @@ export default async function CheckEmailPage({
   const email = sp.email ?? "your inbox";
 
   return (
-    <section>
-      <div className="mx-auto max-w-2xl px-6 py-24 md:px-10 md:py-32">
+    <section className="relative overflow-hidden bg-[radial-gradient(60%_55%_at_12%_-10%,#EFF6FF,transparent_55%)]">
+      <HeroScene className="pointer-events-none absolute inset-0 h-full w-full" />
+      <div className="relative z-10 mx-auto max-w-2xl px-6 py-24 md:px-10 md:py-32">
         <div className="mb-10 flex h-14 w-14 items-center justify-center border border-border bg-bg">
           <Mail className="h-6 w-6 text-brand" aria-hidden="true" />
         </div>
