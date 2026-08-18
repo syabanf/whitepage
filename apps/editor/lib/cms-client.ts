@@ -620,3 +620,27 @@ export async function listAssets(tenantId: string): Promise<Asset[]> {
   if (!res.ok) throw new Error(`list assets failed: ${res.status}`);
   return (await res.json()) as Asset[];
 }
+
+export async function updateAsset(
+  tenantId: string,
+  assetId: string,
+  patch: { altText?: string; tags?: string[] }
+): Promise<Asset> {
+  const res = await fetch(`${API_BASE}/tenants/${tenantId}/assets/${assetId}`, {
+    method: "PATCH",
+    headers: await authed(),
+    body: JSON.stringify(patch),
+    cache: "no-store"
+  });
+  if (!res.ok) throw new Error(`update asset failed: ${res.status}`);
+  return (await res.json()) as Asset;
+}
+
+export async function deleteAsset(tenantId: string, assetId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/tenants/${tenantId}/assets/${assetId}`, {
+    method: "DELETE",
+    headers: await authed(),
+    cache: "no-store"
+  });
+  if (!res.ok && res.status !== 404) throw new Error(`delete asset failed: ${res.status}`);
+}

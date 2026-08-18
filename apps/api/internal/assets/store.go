@@ -49,6 +49,21 @@ func (s *Store) Save(tenantID uuid.UUID, filename string, data []byte) (string, 
 	return key, nil
 }
 
+// Delete removes the stored file for a key. Missing files are not an error
+// (the DB row is the source of truth; a vanished file shouldn't block cleanup).
+// The key is confined to the store dir to prevent path escape.
+func (s *Store) Delete(key string) error {
+	full := filepath.Join(s.dir, filepath.FromSlash(key))
+	rel, err := filepath.Rel(s.dir, full)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		return fmt.Errorf("invalid storage key")
+	}
+	if err := os.Remove(full); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("remove file: %w", err)
+	}
+	return nil
+}
+
 // Dimensions reads width/height from image header bytes. Returns 0,0 if the
 // format is unknown (e.g. SVG) so callers can fall back gracefully.
 func Dimensions(data []byte) (width, height int) {

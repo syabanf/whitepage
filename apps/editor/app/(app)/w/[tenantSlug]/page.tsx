@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { HeroScene } from "@/components/HeroScene";
 import { notFound, redirect } from "next/navigation";
-import { ArrowRight, ExternalLink, FileText, FolderPlus, Globe, Layers, Megaphone, MessageSquare, Plus, RefreshCw } from "lucide-react";
+import { ArrowRight, ExternalLink, FileText, FolderPlus, Globe, Images, Layers, Megaphone, MessageSquare, Plus, RefreshCw } from "lucide-react";
 import { getMe } from "@/lib/auth/session";
 import { listEntries, listProjects, listPublishes, type Entry, type Project } from "@/lib/cms-client";
 import { DeleteButton } from "@/components/DeleteButton";
@@ -65,6 +65,13 @@ export default async function WorkspacePage({
               >
                 <MessageSquare className="mr-2 h-4 w-4" />
                 Comments
+              </Link>
+              <Link
+                href={`/w/${tenantSlug}/media`}
+                className="inline-flex h-10 items-center rounded-md border border-border-emphasis bg-bg px-4 text-sm font-medium text-text transition-colors hover:border-brand hover:text-brand"
+              >
+                <Images className="mr-2 h-4 w-4" />
+                Media
               </Link>
               <a
                 href="http://localhost:4321"

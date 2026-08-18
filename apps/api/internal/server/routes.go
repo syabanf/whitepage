@@ -74,6 +74,8 @@ func (s *Server) routes() {
 
 			r.Get("/assets", assetsH.List)
 			r.Post("/assets", assetsH.Upload)
+			r.Patch("/assets/{assetId}", assetsH.Update)
+			r.Delete("/assets/{assetId}", assetsH.Delete)
 
 			// Projects (a tenant has many)
 			r.Get("/projects", projects.List)
