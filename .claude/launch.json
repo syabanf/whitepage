@@ -4,8 +4,8 @@
     {
       "name": "editor",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@cms/editor", "exec", "next", "dev", "-p", "3010"],
-      "port": 3010,
+      "runtimeArgs": ["--filter", "@cms/editor", "exec", "next", "dev", "-p", "3011"],
+      "port": 3011,
       "autoPort": false
     }
   ]
